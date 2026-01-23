@@ -1,22 +1,31 @@
 from django.apps import AppConfig
 import os
+import sys
 
 class ServeurConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "serveur"
 
     def ready(self):
+        print("🔥 ready() exécuté", file=sys.stderr)
+
         from django.contrib.auth import get_user_model
         User = get_user_model()
 
-        username = os.environ.get("sk")
-        email = os.environ.get("lesaints969@gmail.com")
-        password = os.environ.get("Dieu4710")
+        username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
+        email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
+        password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
 
-        if username and password:
-            if not User.objects.filter(username=username).exists():
-                User.objects.create_superuser(
-                    username=username,
-                    email=email,
-                    password=password
-                )
+        if not username or not password:
+            print("❌ variables manquantes", file=sys.stderr)
+            return
+
+        if not User.objects.filter(username=username).exists():
+            User.objects.create_superuser(
+                username=username,
+                email=email,
+                password=password
+            )
+            print("✅ superuser créé", file=sys.stderr)
+        else:
+            print("ℹ️ superuser existe déjà", file=sys.stderr)
