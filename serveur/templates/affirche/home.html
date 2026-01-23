@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>SK Serveur</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    background:#0b0f17;
+    color:#fff;
+    font-family:Arial,sans-serif;
+}
+.container{width:90%;margin:auto;}
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:30px 0;
+}
+.btn{
+    padding:10px 16px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:bold;
+}
+.login{background:#4e8cff;color:#fff;}
+.register{background:#22c55e;color:#000;}
+
+.search{
+    display:flex;
+    gap:10px;
+    margin-bottom:30px;
+}
+.search input{
+    flex:1;
+    padding:12px;
+    border-radius:12px;
+    border:none;
+    background:#0f172a;
+    color:#fff;
+}
+.search button{
+    padding:12px 20px;
+    border:none;
+    border-radius:12px;
+    background:#4e8cff;
+    color:#fff;
+    font-weight:bold;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+}
+.card{
+    background:rgba(255,255,255,0.06);
+    padding:16px;
+    border-radius:16px;
+}
+.card img{
+    width:100%;
+    height:180px;
+    object-fit:contain;
+    background:#0f172a;
+    border-radius:12px;
+    margin-bottom:10px;
+}
+.price{color:#4e8cff;font-weight:bold;}
+.commander{
+    display:block;
+    margin-top:10px;
+    text-align:center;
+    background:#facc15;
+    color:#000;
+    padding:10px;
+    border-radius:10px;
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+    <h1><span style="color:#4e8cff;">SK</span> Serveur</h1>
+    <div>
+        <a href="{% url 'login' %}" class="btn login">Se connecter</a>
+        <a href="{% url 'register' %}" class="btn register">S’inscrire</a>
+    </div>
+</div>
+
+<!-- RECHERCHE -->
+<form method="get" class="search">
+    <input
+        type="text"
+        name="q"
+        placeholder="Rechercher une licence ou un service"
+        value="{{ query }}"
+    >
+    <button type="submit">Rechercher</button>
+</form>
+
+<!-- LICENCES -->
+<h2>Licences</h2>
+<div class="cards">
+{% for lic in licences %}
+    <div class="card">
+        {% if lic.image %}
+            <img src="{{ lic.image }}" alt="{{ lic.nom }}">
+        {% endif %}
+        <h3>{{ lic.nom }}</h3>
+        <div class="price">{{ lic.prix }} FCFA</div>
+        <p>{{ lic.destription }}</p>
+        <a href="{% url 'login' %}" class="commander">🛒 Commander</a>
+    </div>
+{% empty %}
+    <p>Aucune licence trouvée.</p>
+{% endfor %}
+</div>
+
+<!-- SERVICES IMEI -->
+<h2 style="margin-top:40px;">Services IMEI</h2>
+<div class="cards">
+{% for s in services %}
+    <div class="card">
+        <h3>{{ s.nom }}</h3>
+        <div class="price">{{ s.prix }} FCFA</div>
+        <p>{{ s.destription }}</p>
+        <a href="{% url 'login' %}" class="commander">🛒 Commander</a>
+    </div>
+{% empty %}
+    <p>Aucun service trouvé.</p>
+{% endfor %}
+</div>
+
+</div>
+
+</body>
+</html>

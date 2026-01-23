@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SK Serveur</title>
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#0b0f17;
+    color:#fff;
+}
+
+.container{width:90%;margin:auto;}
+
+/* USER */
+.user-box{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:15px;
+    background:rgba(255,255,255,0.06);
+    padding:12px 18px;
+    border-radius:16px;
+}
+
+.logout-btn{
+    border:none;
+    padding:8px 14px;
+    border-radius:10px;
+    background:linear-gradient(135deg,#ff4e4e,#ff7676);
+    color:#fff;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* HEADER */
+.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:25px 0;
+    position:relative;
+}
+
+.logo{
+    font-size:22px;
+    font-weight:bold;
+}
+.logo .sk{
+    font-size:36px;
+    color:#4e8cff;
+}
+
+.menu-btn{
+    font-size:28px;
+    cursor:pointer;
+    padding:8px 14px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.06);
+}
+
+/* MENU */
+.menu-list{
+    display:none;
+    position:absolute;
+    top:70px;
+    right:0;
+    background:#0f172a;
+    border-radius:14px;
+    padding:10px;
+    min-width:180px;
+}
+.menu-list button{
+    width:100%;
+    background:none;
+    border:none;
+    color:#fff;
+    padding:12px;
+    cursor:pointer;
+}
+.menu-list.show{display:block;}
+
+/* TITLE */
+.main-title{
+    text-align:center;
+    margin-bottom:20px;
+}
+.main-title h1{
+    letter-spacing:4px;
+}
+
+/* SEARCH */
+.search{
+    display:flex;
+    gap:10px;
+    margin-bottom:30px;
+}
+.search input{
+    flex:1;
+    padding:12px;
+    border-radius:12px;
+    border:none;
+    background:#0f172a;
+    color:#fff;
+}
+.search button{
+    padding:12px 20px;
+    border:none;
+    border-radius:12px;
+    background:#4e8cff;
+    color:#fff;
+}
+
+/* SECTIONS */
+.section{display:none;}
+.section.active{display:block;}
+
+/* GRID */
+.cards-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:20px;
+}
+
+/* CARD */
+.card{
+    background:rgba(255,255,255,0.06);
+    padding:16px;
+    border-radius:16px;
+    transition:.3s;
+}
+.card:hover{
+    background:rgba(78,140,255,0.18);
+    transform:translateY(-4px);
+}
+
+.card img{
+    width:100%;
+    height:180px;
+    object-fit:contain;
+    background:#0f172a;
+    border-radius:12px;
+    margin-bottom:10px;
+}
+
+.price{color:#4e8cff;font-weight:bold;}
+.small{font-size:13px;color:#b0b8c6;}
+
+/* BOUTON */
+.btn-fonds{
+    display:block;
+    margin-top:15px;
+    padding:12px;
+    border-radius:12px;
+    text-align:center;
+    background:linear-gradient(135deg,#4e8cff,#2bd3ff);
+    color:#fff;
+    font-weight:bold;
+    text-decoration:none;
+}
+.btn-fonds:hover{opacity:.9;}
+
+@media (max-width:1200px){
+    .cards-grid{grid-template-columns:repeat(2, 1fr);}
+}
+@media (max-width:768px){
+    .cards-grid{grid-template-columns:repeat(1, 1fr);}
+}
+</style>
+</head>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const msg = document.getElementById("commande-message");
+    if (msg) {
+        setTimeout(() => {
+            msg.style.transition = "opacity 0.6s ease";
+            msg.style.opacity = "0";
+            setTimeout(() => msg.remove(), 600);
+        }, 10000); // ⏱ 10 secondes
+    }
+});
+</script>
+
+
+<body>
+
+<div class="container">
+
+<!-- USER -->
+<div class="user-box">
+    <div>
+        👤 {{ user.username }} <br>
+        📧 {{ user.email }}
+    </div>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="logout-btn">Déconnexion</button>
+    </form>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == "success" %}
+            <div id="commande-message" style="
+                margin-top:20px;
+                background:linear-gradient(135deg,#1e293b,#0f172a);
+                border-left:6px solid #22c55e;
+                padding:18px 20px;
+                border-radius:16px;
+                box-shadow:0 15px 40px rgba(0,0,0,0.5);
+            ">
+                <h3 style="margin:0 0 6px 0;color:#22c55e;">
+                    ✅ Commande envoyée
+                </h3>
+                <p style="margin:0;color:#e5e7eb;">
+                    Votre commande a été prise en compte avec succès.<br>
+                    ⏳ Elle est actuellement <strong>en attente de traitement</strong>.
+                </p>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+
+<!-- HEADER -->
+<div class="top">
+    <div class="logo"><span class="sk">SK</span> Serveur</div>
+    <div class="menu-btn" onclick="toggleMenu()">≡</div>
+
+    <div class="menu-list" id="menuList">
+        <button onclick="showSection('licences')">Licences</button>
+        <button onclick="showSection('services')">Services IMEI</button>
+        <button onclick="showSection('fonds')">Fonds</button>
+        <button onclick="showSection('historique')">Historique</button>
+    </div>
+</div>
+
+<div class="main-title">
+    <h1>SERVEUR SK</h1>
+</div>
+
+<form class="search" method="get">
+    <input type="text" name="q" value="{{ query }}" placeholder="Rechercher licence ou service">
+    <button>Rechercher</button>
+</form>
+
+<!-- LICENCES -->
+<div id="licences" class="section active">
+
+    <h2>Licences</h2>
+    <div class="cards-grid">
+        {% for lic in licences %}
+        <div class="card">
+            {% if lic.image %}
+            <img src="{{ lic.image }}" alt="{{ lic.nom }}">
+            {% endif %}
+            <h3>{{ lic.nom }}</h3>
+            <div class="price">{{ lic.prix }} FCFA</div>
+            <div class="small">{{ lic.destription }}</div>
+
+            <!-- ✅ BOUTON COMMANDER -->
+            <a href="{% url 'commande' 'licence' lic.id %}" class="btn-fonds">
+                🛒 Commander
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- SERVICES -->
+<div id="services" class="section active">
+
+    <h2>Services IMEI</h2>
+    <div class="cards-grid">
+        {% for s in services %}
+        <div class="card">
+            <h3>{{ s.nom }}</h3>
+            <div class="price">{{ s.prix }} FCFA</div>
+            <div class="small">{{ s.destription }}</div>
+
+            <!-- ✅ BOUTON COMMANDER -->
+            <a href="{% url 'commande' 'service' s.id %}" class="btn-fonds">
+                🛒 Commander
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- FONDS -->
+<div id="fonds" class="section">
+    <div class="card">
+        <h3>Mon solde</h3>
+        <div class="price">{{ wallet.solde|default:"0" }} FCFA</div>
+        <a href="{% url 'fonds' %}" class="btn-fonds">➕ Ajouter des fonds</a>
+    </div>
+</div>
+
+<!-- HISTORIQUE -->
+<!-- HISTORIQUE -->
+<div id="historique" class="section">
+    <h2>Historique & Commandes</h2>
+
+    <!-- COMMANDES EN ATTENTE -->
+    {% for c in commandes_attente %}
+        <div class="card">
+            <strong>{{ c.nom_produit }}</strong><br>
+            <span class="price">{{ c.prix }} FCFA</span><br>
+            <span class="small">Statut : ⏳ En attente</span><br>
+            <span class="small">Date : {{ c.date|date:"d/m/Y H:i" }}</span>
+        </div>
+    {% endfor %}
+
+    <!-- COMMANDES VALIDÉES -->
+    {% for h in historiques %}
+        <div class="card">
+            <strong>{{ h.nom_service }}</strong><br>
+            <span class="price">{{ h.prix }} FCFA</span><br>
+            <span class="small">
+                Statut :
+                {% if h.statut == "succes" %}
+                    ✅ Succès
+                {% elif h.statut == "echec" %}
+                    ❌ Échec
+                {% endif %}
+            </span>
+
+            <span class="small">Date : {{ h.date|date:"d/m/Y H:i" }}</span>
+        </div>
+    {% empty %}
+        <div class="card">Aucune opération enregistrée</div>
+    {% endfor %}
+</div>
+
+
+</div>
+
+<script>
+function toggleMenu(){
+    document.getElementById("menuList").classList.toggle("show");
+}
+function showSection(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById("menuList").classList.remove("show");
+}
+</script>
+
+</body>
+</html>

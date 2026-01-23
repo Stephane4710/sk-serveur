@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b0f17;
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            display: flex;
+            width: 900px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+        }
+
+        .left {
+            background: linear-gradient(135deg, #1f2a44, #0d1528);
+            width: 40%;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .left h2 {
+            margin-top: 0;
+            font-size: 28px;
+        }
+
+        .left p {
+            margin-top: 10px;
+            color: #b0b8c6;
+            font-size: 14px;
+        }
+
+        .right {
+            background: #0b0f17;
+            width: 60%;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .right h2 {
+            margin-top: 0;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            background: #0f172a;
+            border: 1px solid #1e2a44;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-group .icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #9aa3b0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4e8cff, #2bd3ff);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .bottom {
+            margin-top: 20px;
+            text-align: center;
+            color: #b0b8c6;
+        }
+
+        .bottom a {
+            color: #4e8cff;
+            text-decoration: none;
+        }
+
+        .bottom a:hover {
+            text-decoration: underline;
+        }
+
+        /* --------- TOAST (message stylé) --------- */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(40, 255, 163, 0.12);
+            border: 1px solid rgba(40, 255, 163, 0.4);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            color: #bfffdc;
+            font-weight: bold;
+            animation: showToast 0.5s ease;
+            z-index: 9999;
+        }
+
+        @keyframes showToast {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast.success {
+            border-color: rgba(40, 255, 163, 0.6);
+        }
+
+        .toast.error {
+            background: rgba(255, 60, 60, 0.12);
+            border-color: rgba(255, 60, 60, 0.4);
+            color: #ffd6d6;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <div class="left">
+            <h2>Inscription Au Serveur SK</h2>
+            <p>Crée ton compte pour accéder aux licences et services IMEI.</p>
+            <p>Après inscription, tu seras redirigé vers la connexion.</p>
+        </div>
+
+        <div class="right">
+            <h2>Créer un compte</h2>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <span class="icon">👤</span>
+                    <input type="text" name="username" placeholder="Nom d'utilisateur" required>
+                </div>
+
+                <div class="form-group">
+                    <span class="icon">📧</span>
+                    <input type="email" name="email" placeholder="Gmail" required>
+                </div>
+
+                <div class="form-group">
+                    <span class="icon">🔒</span>
+                    <input type="password" name="password1" placeholder="Mot de passe" required>
+                </div>
+
+                <div class="form-group">
+                    <span class="icon">🔒</span>
+                    <input type="password" name="password2" placeholder="Confirmer le mot de passe" required>
+                </div>
+
+                <button class="btn" type="submit">S'inscrire</button>
+            </form>
+
+            <div class="bottom">
+                <p>Déjà un compte ? <a href="{% url 'login' %}">Se connecter</a></p>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ====== TOAST MESSAGE ====== -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="toast {{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+
+</body>
+</html>

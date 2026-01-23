@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Passer commande</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    background:#0b0f17;
+    font-family:Arial, sans-serif;
+    color:#fff;
+}
+
+.container{
+    width:400px;
+    margin:60px auto;
+    background:rgba(255,255,255,0.06);
+    padding:25px;
+    border-radius:16px;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.info{
+    margin-bottom:15px;
+    text-align:center;
+}
+
+.price{
+    color:#4e8cff;
+    font-size:18px;
+    font-weight:bold;
+}
+
+form input{
+    width:100%;
+    padding:12px;
+    margin-bottom:15px;
+    border-radius:10px;
+    border:none;
+    background:#0f172a;
+    color:#fff;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#4e8cff,#2bd3ff);
+    color:#fff;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+.back{
+    display:block;
+    text-align:center;
+    margin-top:15px;
+    color:#b0b8c6;
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🛒 Commander</h2>
+
+    <div class="info">
+        <strong>{{ produit.nom }}</strong><br>
+        <span class="price">{{ produit.prix }} FCFA</span>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- EMAIL -->
+        <input
+            type="email"
+            name="email"
+            placeholder="Adresse email"
+            required
+        >
+
+        <!-- USERNAME / IDENTIFIANT -->
+        <input
+            type="text"
+            name="username_service"
+            placeholder="Nom d'utilisateur"
+            required
+        >
+
+        <!-- 🔐 CHAMPS UNIQUEMENT POUR SERVICE IMEI -->
+        {% if type == "service" %}
+            <input
+                type="text"
+                name="imei"
+                placeholder="Numéro IMEI"
+                required
+            >
+
+            <input
+                type="url"
+                name="photo_lien"
+                placeholder="Lien de la photo du téléphone"
+                required
+            >
+        {% endif %}
+
+        <button type="submit">Commander</button>
+    </form>
+
+    <a href="{% url 'accueil' %}" class="back">⬅ Retour à l’accueil</a>
+</div>
+
+</body>
+</html>

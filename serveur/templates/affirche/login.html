@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b0f17;
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            display: flex;
+            width: 900px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+        }
+
+        .left {
+            background: linear-gradient(135deg, #1f2a44, #0d1528);
+            width: 40%;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .left h2 {
+            margin-top: 0;
+            font-size: 28px;
+        }
+
+        .left p {
+            margin-top: 10px;
+            color: #b0b8c6;
+            font-size: 14px;
+        }
+
+        .right {
+            background: #0b0f17;
+            width: 60%;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .right h2 {
+            margin-top: 0;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            background: #0f172a;
+            border: 1px solid #1e2a44;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-group .icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #9aa3b0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4e8cff, #2bd3ff);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .bottom {
+            margin-top: 20px;
+            text-align: center;
+            color: #b0b8c6;
+        }
+
+        .bottom a {
+            color: #4e8cff;
+            text-decoration: none;
+        }
+
+        .bottom a:hover {
+            text-decoration: underline;
+        }
+        .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    }
+
+    .toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    min-width: 300px;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+    animation: toastIn 0.4s ease;
+    position: relative;
+    }
+
+    .toast.success {
+    background: rgba(40, 255, 163, 0.12);
+    border-color: rgba(40, 255, 163, 0.4);
+    }
+
+    .toast.error {
+    background: rgba(255, 60, 60, 0.12);
+    border-color: rgba(255, 60, 60, 0.4);
+    }
+
+    .toast-icon {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-weight: bold;
+    background: rgba(255,255,255,0.1);
+    }
+
+    .toast.success .toast-icon {
+    color: #b8ffdf;
+    }
+
+    .toast.error .toast-icon {
+    color: #ffd6d6;
+    }
+
+    .toast-text {
+    flex: 1;
+    color: #fff;
+    font-weight: bold;
+    }
+
+    .toast-close {
+    cursor: pointer;
+    font-size: 20px;
+    color: rgba(255,255,255,0.6);
+    padding: 2px 6px;
+    }
+
+    @keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    }
+
+
+ 
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <div class="left">
+            <h2>SK serveur</h2>
+            <p>Connectez-vous pour accéder à votre espace, gérer vos licences et services IMEI.</p>
+            <p>Si vous n'avez pas de compte, inscrivez-vous.</p>
+        </div>
+
+        <div class="right">
+            <h2>Connexion</h2>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <span class="icon">👤</span>
+                    <input type="text" name="username" placeholder="Nom d'utilisateur" required>
+                </div>
+
+                <div class="form-group">
+                    <span class="icon">🔒</span>
+                    <input type="password" name="password" placeholder="Mot de passe" required>
+                </div>
+
+                <button class="btn" type="submit">Se connecter</button>
+            </form>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="toast {{ message.tags }}">
+                {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+<script>
+    setTimeout(function() {
+        document.querySelectorAll('.toast').forEach(function(t) {
+            t.style.display = 'none';
+        });
+    }, 3000);
+</script>
+
+
+            <div class="bottom">
+                <p>Pas de compte ? <a href="{% url 'register' %}">S'inscrire</a></p>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+</body>
+<!-- ===== TOAST MESSAGE STYLE ===== -->
+{% if messages %}
+  <div class="toast-container">
+    {% for message in messages %}
+      <div class="toast {{ message.tags }}">
+        <div class="toast-icon">
+          {% if message.tags == "success" %}
+            ✓
+          {% else %}
+            !
+          {% endif %}
+        </div>
+        <div class="toast-text">{{ message }}</div>
+        <div class="toast-close" onclick="this.parentElement.style.display='none'">×</div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+</html>
