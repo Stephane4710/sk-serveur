@@ -32,10 +32,6 @@ body{
     gap:20px;
 }
 
-.header h1{
-    margin:0;
-}
-
 .header-actions{
     display:flex;
     gap:10px;
@@ -46,19 +42,10 @@ body{
     border-radius:10px;
     text-decoration:none;
     font-weight:bold;
-    display:inline-block;
-    text-align:center;
 }
 
-.login{
-    background:#4e8cff;
-    color:#fff;
-}
-
-.register{
-    background:#22c55e;
-    color:#000;
-}
+.login{background:#4e8cff;color:#fff;}
+.register{background:#22c55e;color:#000;}
 
 /* =====================
    SEARCH
@@ -85,7 +72,6 @@ body{
     background:#4e8cff;
     color:#fff;
     font-weight:bold;
-    cursor:pointer;
 }
 
 /* =====================
@@ -130,42 +116,74 @@ body{
 }
 
 /* =====================
-   RESPONSIVE MOBILE
+   WHATSAPP FLOAT
 ===================== */
-@media (max-width: 768px){
+.whatsapp-float{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#25D366;
+    color:#fff;
+    padding:14px 18px;
+    border-radius:50px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 10px 20px rgba(0,0,0,.4);
+    z-index:1000;
+}
 
-    .header{
-        flex-direction:column;
-        text-align:center;
-    }
+/* =====================
+   WHATSAPP MODAL
+===================== */
+.whatsapp-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    z-index:1001;
+}
 
-    .header h1{
-        font-size:26px;
-    }
+.whatsapp-box{
+    background:#0f172a;
+    width:90%;
+    max-width:320px;
+    margin:120px auto;
+    padding:20px;
+    border-radius:16px;
+    text-align:center;
+}
 
-    .header-actions{
-        width:100%;
-    }
+.whatsapp-box h3{
+    margin-top:0;
+}
 
-    .btn{
-        width:100%;
-    }
+.whatsapp-box a{
+    display:block;
+    margin:10px 0;
+    padding:12px;
+    border-radius:12px;
+    background:#25D366;
+    color:#fff;
+    text-decoration:none;
+    font-weight:bold;
+}
 
-    .search{
-        flex-direction:column;
-    }
+.close{
+    margin-top:10px;
+    color:#aaa;
+    cursor:pointer;
+    font-size:14px;
+}
 
-    .search button{
-        width:100%;
-    }
-
-    .cards{
-        grid-template-columns:1fr;
-    }
-
-    .card img{
-        height:160px;
-    }
+/* =====================
+   RESPONSIVE
+===================== */
+@media(max-width:768px){
+    .header{flex-direction:column;text-align:center;}
+    .header-actions{flex-direction:column;width:100%;}
+    .btn{width:100%;}
+    .search{flex-direction:column;}
+    .cards{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -183,15 +201,10 @@ body{
     </div>
 </div>
 
-<!-- RECHERCHE -->
+<!-- SEARCH -->
 <form method="get" class="search">
-    <input
-        type="text"
-        name="q"
-        placeholder="Rechercher une licence ou un service"
-        value="{{ query }}"
-    >
-    <button type="submit">Rechercher</button>
+    <input type="text" name="q" placeholder="Rechercher une licence ou un service" value="{{ query }}">
+    <button>Rechercher</button>
 </form>
 
 <!-- LICENCES -->
@@ -228,6 +241,37 @@ body{
 </div>
 
 </div>
+
+<!-- WHATSAPP BUTTON -->
+<div class="whatsapp-float" onclick="openWhatsApp()">
+    💬 WhatsApp
+</div>
+
+<!-- WHATSAPP MODAL -->
+<div class="whatsapp-modal" id="whatsappModal">
+    <div class="whatsapp-box">
+        <h3>Choisissez un numéro</h3>
+
+        <a href="https://wa.me/225757045224" target="_blank">
+            📞 0757045224
+        </a>
+
+        <a href="https://wa.me/225748563034" target="_blank">
+            📞 0748563034
+        </a>
+
+        <div class="close" onclick="closeWhatsApp()">Fermer</div>
+    </div>
+</div>
+
+<script>
+function openWhatsApp(){
+    document.getElementById("whatsappModal").style.display="block";
+}
+function closeWhatsApp(){
+    document.getElementById("whatsappModal").style.display="none";
+}
+</script>
 
 </body>
 </html>
