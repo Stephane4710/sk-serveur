@@ -13,6 +13,7 @@ from .models import (
     Transaction,
     Commande,
     PaymentConfig,
+    Service,
 )
 
 # =========================
@@ -215,6 +216,40 @@ class TransactionAdmin(admin.ModelAdmin):
     list_filter = ("statut", "methode")
     readonly_fields = ("user", "montant", "methode", "reference", "date")
     actions = [valider_transaction, refuser_transaction]
+
+
+
+
+from .models import CustomField, CommandeFieldValue
+
+
+@admin.register(CustomField)
+class CustomFieldAdmin(admin.ModelAdmin):
+    list_display = ("nom", "type", "obligatoire", "category")
+    list_filter = ("category", "type")
+
+
+
+@admin.register(CommandeFieldValue)
+class CommandeFieldValueAdmin(admin.ModelAdmin):
+    list_display = ("commande", "field", "value")
+
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = (
+        "nom",
+        "prix",
+        "category",
+        "demande_email",
+        "demande_username",
+        "demande_imei",
+        "demande_photo",
+    )
+    list_filter = ("category",)
+    search_fields = ("nom", "description")
+
+
 
 
 

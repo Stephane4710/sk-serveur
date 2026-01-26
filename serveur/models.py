@@ -25,6 +25,11 @@ class Licence(models.Model):
     category = models.ForeignKey(Category, related_name='licences', on_delete=models.CASCADE)
     destription = models.TextField()
     image = models.URLField(max_length=5000, blank=True)
+    need_email = models.BooleanField(default=True)
+    need_username = models.BooleanField(default=True)
+    need_imei = models.BooleanField(default=False)
+    need_photo = models.BooleanField(default=False)
+
     date_ajout = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -39,6 +44,11 @@ class ServiceImei(models.Model):
     prix = models.PositiveIntegerField()
     category = models.ForeignKey(Category, related_name='services', on_delete=models.CASCADE)
     destription = models.TextField()
+    need_email = models.BooleanField(default=True)
+    need_username = models.BooleanField(default=True)
+    need_imei = models.BooleanField(default=True)
+    need_photo = models.BooleanField(default=True)
+
     date_ajout = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -185,4 +195,111 @@ class PaymentConfig(models.Model):
 
     def __str__(self):
         return f"{self.methode.upper()} - {self.numero}"
+    
+
+    
+
+
+
+
+# =========================
+# CHAMPS DYNAMIQUES (ADMIN)
+# =========================
+from django.core.exceptions import ValidationError
+
+class CustomField(models.Model):
+    TYPE_CHOICES = [
+        ("text", "Texte"),
+        ("number", "Nombre"),
+        ("email", "Email"),
+        ("imei", "IMEI"),
+        ("url", "Lien"),
+    ]
+
+    nom = models.CharField(max_length=100)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    obligatoire = models.BooleanField(default=True)
+
+    # 🔥 LIÉ À LA CATÉGORIE (BONNE PRATIQUE)
+    category = models.ForeignKey(
+        Category,
+        related_name="custom_fields",
+        on_delete=models.CASCADE,
+        null=True,
+        blank = True
+    )
+
+    def __str__(self):
+        return f"{self.nom} ({self.category.nom})"
+
+
+
+
+    # champ lié à un service OU une licence
+    licence = models.ForeignKey(
+        Licence,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="custom_fields"
+    )
+
+    service = models.ForeignKey(
+        "Service",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="custom_fields"
+    )
+
+    def __str__(self):
+        return self.nom
+
+
+# =========================
+# VALEUR DES CHAMPS (COMMANDE)
+# =========================
+class CommandeFieldValue(models.Model):
+    commande = models.ForeignKey(
+        Commande,
+        on_delete=models.CASCADE,
+        related_name="field_values"
+    )
+    field = models.ForeignKey(CustomField, on_delete=models.CASCADE)
+    value = models.TextField()
+
+    def __str__(self):
+        return f"{self.field.nom} : {self.value}"
+    
+
+
+
+
+
+class Service(models.Model):
+    nom = models.CharField(max_length=200)
+    prix = models.PositiveIntegerField()
+    category = models.ForeignKey(
+    Category,
+    on_delete=models.CASCADE,
+    related_name="services_generaux"
+)
+
+    description = models.TextField()
+    image = models.URLField(blank=True, null=True)
+
+    # options dynamiques
+    demande_email = models.BooleanField(default=True)
+    demande_username = models.BooleanField(default=True)
+    demande_imei = models.BooleanField(default=False)
+    demande_photo = models.BooleanField(default=False)
+
+    date_ajout = models.DateTimeField(auto_now=True)
+    
+
+    def __str__(self):
+        return self.nom
+
+
+
 

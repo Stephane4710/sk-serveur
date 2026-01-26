@@ -83,43 +83,48 @@ button:hover{
     </div>
 
     <form method="post">
-        {% csrf_token %}
+    {% csrf_token %}
 
-        <!-- EMAIL -->
-        <input
-            type="email"
-            name="email"
-            placeholder="Adresse email"
-            required
-        >
+    <!-- EMAIL -->
+    {% if produit.need_email %}
+    <input type="email" name="email" placeholder="Adresse email" required>
+    {% endif %}
 
-        <!-- USERNAME / IDENTIFIANT -->
-        <input
-            type="text"
-            name="username_service"
-            placeholder="Nom d'utilisateur"
-            required
-        >
+    <!-- USERNAME -->
+    {% if produit.need_username %}
+    <input type="text" name="username_service" placeholder="Nom d'utilisateur" required>
+    {% endif %}
 
-        <!-- 🔐 CHAMPS UNIQUEMENT POUR SERVICE IMEI -->
-        {% if type == "service" %}
-            <input
-                type="text"
-                name="imei"
-                placeholder="Numéro IMEI"
-                required
-            >
+    <!-- IMEI -->
+    {% if produit.need_imei %}
+    <input type="text" name="imei" placeholder="Numéro IMEI" required>
+    {% endif %}
 
-            <input
-                type="url"
-                name="photo_lien"
-                placeholder="Lien de la photo du téléphone"
-                required
-            >
-        {% endif %}
+    <!-- PHOTO -->
+    {% if produit.need_photo %}
+    <input type="url" name="photo_lien" placeholder="Lien de la photo" required>
+    {% endif %}
 
-        <button type="submit">Commander</button>
-    </form>
+    <!-- CHAMPS PERSONNALISÉS -->
+    <!-- CHAMPS PERSONNALISÉS -->
+{% for field in custom_fields %}
+    {% if field.type == "text" %}
+        <input type="text" name="custom_{{ field.id }}" placeholder="{{ field.nom }}" {% if field.obligatoire %}required{% endif %}>
+    {% elif field.type == "number" %}
+        <input type="number" name="custom_{{ field.id }}" placeholder="{{ field.nom }}" {% if field.obligatoire %}required{% endif %}>
+    {% elif field.type == "email" %}
+        <input type="email" name="custom_{{ field.id }}" placeholder="{{ field.nom }}" {% if field.obligatoire %}required{% endif %}>
+    {% elif field.type == "imei" %}
+        <input type="text" name="custom_{{ field.id }}" placeholder="IMEI" {% if field.obligatoire %}required{% endif %}>
+    {% elif field.type == "url" %}
+        <input type="url" name="custom_{{ field.id }}" placeholder="{{ field.nom }}" {% if field.obligatoire %}required{% endif %}>
+    {% endif %}
+{% endfor %}
+
+
+    <button type="submit">Commander</button>
+</form>
+
 
     <a href="{% url 'accueil' %}" class="back">⬅ Retour à l’accueil</a>
 </div>

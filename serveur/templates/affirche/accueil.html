@@ -71,7 +71,8 @@ body{
     background:#0f172a;
     border-radius:14px;
     padding:10px;
-    min-width:180px;
+    min-width:200px;
+    z-index:50;
 }
 .menu-list button{
     width:100%;
@@ -80,17 +81,9 @@ body{
     color:#fff;
     padding:12px;
     cursor:pointer;
+    text-align:left;
 }
 .menu-list.show{display:block;}
-
-/* TITLE */
-.main-title{
-    text-align:center;
-    margin-bottom:20px;
-}
-.main-title h1{
-    letter-spacing:4px;
-}
 
 /* SEARCH */
 .search{
@@ -139,7 +132,8 @@ body{
 
 .card img{
     width:100%;
-    height:180px;
+    max-height:180px;
+    height:auto;
     object-fit:contain;
     background:#0f172a;
     border-radius:12px;
@@ -149,7 +143,6 @@ body{
 .price{color:#4e8cff;font-weight:bold;}
 .small{font-size:13px;color:#b0b8c6;}
 
-/* BOUTON */
 .btn-fonds{
     display:block;
     margin-top:15px;
@@ -161,31 +154,26 @@ body{
     font-weight:bold;
     text-decoration:none;
 }
-.btn-fonds:hover{opacity:.9;}
+
+.card{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+}
+
+.btn-fonds{
+    margin-top:auto;
+}
+
 
 @media (max-width:1200px){
-    .cards-grid{grid-template-columns:repeat(2, 1fr);}
+    .cards-grid{grid-template-columns:repeat(2,1fr);}
 }
 @media (max-width:768px){
-    .cards-grid{grid-template-columns:repeat(1, 1fr);}
+    .cards-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const msg = document.getElementById("commande-message");
-    if (msg) {
-        setTimeout(() => {
-            msg.style.transition = "opacity 0.6s ease";
-            msg.style.opacity = "0";
-            setTimeout(() => msg.remove(), 600);
-        }, 10000); // ⏱ 10 secondes
-    }
-});
-</script>
-
 
 <body>
 
@@ -203,58 +191,90 @@ document.addEventListener("DOMContentLoaded", function () {
     </form>
 </div>
 
-{% if messages %}
-    {% for message in messages %}
-        {% if message.tags == "success" %}
-            <div id="commande-message" style="
-                margin-top:20px;
-                background:linear-gradient(135deg,#1e293b,#0f172a);
-                border-left:6px solid #22c55e;
-                padding:18px 20px;
-                border-radius:16px;
-                box-shadow:0 15px 40px rgba(0,0,0,0.5);
-            ">
-                <h3 style="margin:0 0 6px 0;color:#22c55e;">
-                    ✅ Commande envoyée
-                </h3>
-                <p style="margin:0;color:#e5e7eb;">
-                    Votre commande a été prise en compte avec succès.<br>
-                    ⏳ Elle est actuellement <strong>en attente de traitement</strong>.
-                </p>
-            </div>
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-
 <!-- HEADER -->
 <div class="top">
     <div class="logo"><span class="sk">SK</span> Serveur</div>
     <div class="menu-btn" onclick="toggleMenu()">≡</div>
 
     <div class="menu-list" id="menuList">
-        <button onclick="showSection('licences')">Licences</button>
-        <button onclick="showSection('services')">Services IMEI</button>
+        <button onclick="showSection('all')">Accueil</button>
+
+        {% for cat in categories %}
+            <button onclick="showSection('cat-{{ cat.id }}')">
+                {{ cat.nom }}
+            </button>
+        {% endfor %}
+
         <button onclick="showSection('fonds')">Fonds</button>
         <button onclick="showSection('historique')">Historique</button>
     </div>
 </div>
 
-<div class="main-title">
-    <h1>SERVEUR SK</h1>
-</div>
-
 <form class="search" method="get">
-    <input type="text" name="q" value="{{ query }}" placeholder="Rechercher licence ou service">
+    <input type="text" name="q" value="{{ query }}" placeholder="Rechercher un service">
     <button>Rechercher</button>
 </form>
 
-<!-- LICENCES -->
-<div id="licences" class="section active">
+<!-- =======================
+     ACCUEIL : TOUT
+======================= -->
+<div id="all" class="section active">
+    {% for cat in categories %}
+        <h2 style="margin-top:30px;color:#4e8cff;">{{ cat.nom }}</h2>
 
-    <h2>Licences</h2>
+        <div class="cards-grid">
+            {% for lic in cat.licences.all %}
+            <div class="card">
+                {% if lic.image %}
+                <img src="{{ lic.image }}" alt="{{ lic.nom }}">
+                {% endif %}
+                <h3>{{ lic.nom }}</h3>
+                <div class="price">{{ lic.prix }} FCFA</div>
+                <div class="small">{{ lic.destription }}</div>
+                <a href="{% url 'commande' 'licence' lic.id %}" class="btn-fonds">
+                    🛒 Commander
+                </a>
+            </div>
+            {% endfor %}
+
+            {% for s in cat.services.all %}
+            <div class="card">
+                <h3>{{ s.nom }}</h3>
+                <div class="price">{{ s.prix }} FCFA</div>
+                <div class="small">{{ s.destription }}</div>
+                <a href="{% url 'commande' 'service' s.id %}" class="btn-fonds">
+                    🛒 Commander
+                </a>
+            </div>
+            {% endfor %}
+            {% for srv in cat.services_generaux.all %}
+            <div class="card">
+                {% if srv.image %}
+                    <img src="{{ srv.image }}" alt="{{ srv.nom }}">
+                {% endif %}
+                <h3>{{ srv.nom }}</h3>
+                <div class="price">{{ srv.prix }} FCFA</div>
+                <div class="small">{{ srv.description }}</div>
+
+                ✅ <a href="{% url 'commande' 'service_general' srv.id %}" class="btn-fonds">
+                    🛒 Commander
+                </a>
+            </div>
+             {% endfor %}
+
+        </div>
+    {% endfor %}
+</div>
+
+<!-- =======================
+     PAR CATÉGORIE
+======================= -->
+{% for cat in categories %}
+<div id="cat-{{ cat.id }}" class="section">
+    <h2>{{ cat.nom }}</h2>
+
     <div class="cards-grid">
-        {% for lic in licences %}
+        {% for lic in cat.licences.all %}
         <div class="card">
             {% if lic.image %}
             <img src="{{ lic.image }}" alt="{{ lic.nom }}">
@@ -262,81 +282,80 @@ document.addEventListener("DOMContentLoaded", function () {
             <h3>{{ lic.nom }}</h3>
             <div class="price">{{ lic.prix }} FCFA</div>
             <div class="small">{{ lic.destription }}</div>
-
-            <!-- ✅ BOUTON COMMANDER -->
             <a href="{% url 'commande' 'licence' lic.id %}" class="btn-fonds">
                 🛒 Commander
             </a>
         </div>
         {% endfor %}
-    </div>
-</div>
 
-<!-- SERVICES -->
-<div id="services" class="section active">
-
-    <h2>Services IMEI</h2>
-    <div class="cards-grid">
-        {% for s in services %}
+        {% for s in cat.services.all %}
         <div class="card">
             <h3>{{ s.nom }}</h3>
             <div class="price">{{ s.prix }} FCFA</div>
             <div class="small">{{ s.destription }}</div>
-
-            <!-- ✅ BOUTON COMMANDER -->
             <a href="{% url 'commande' 'service' s.id %}" class="btn-fonds">
                 🛒 Commander
             </a>
         </div>
         {% endfor %}
+
+        {% for srv in cat.services_generaux.all %}
+    <div class="card">
+        {% if srv.image %}
+            <img src="{{ srv.image }}" alt="{{ srv.nom }}">
+        {% endif %}
+        <h3>{{ srv.nom }}</h3>
+        <div class="price">{{ srv.prix }} FCFA</div>
+        <div class="small">{{ srv.description }}</div>
+
+        ✅ <a href="{% url 'commande' 'service_general' srv.id %}" class="btn-fonds">
+            🛒 Commander
+        </a>
+    </div>
+    {% endfor %}
+
+
+
+
+
+
     </div>
 </div>
+{% endfor %}
 
 <!-- FONDS -->
 <div id="fonds" class="section">
     <div class="card">
         <h3>Mon solde</h3>
-        <div class="price">{{ wallet.solde|default:"0" }} FCFA</div>
+        <div class="price">{{ wallet.solde }} FCFA</div>
         <a href="{% url 'fonds' %}" class="btn-fonds">➕ Ajouter des fonds</a>
     </div>
 </div>
 
 <!-- HISTORIQUE -->
-<!-- HISTORIQUE -->
 <div id="historique" class="section">
     <h2>Historique & Commandes</h2>
 
-    <!-- COMMANDES EN ATTENTE -->
     {% for c in commandes_attente %}
         <div class="card">
             <strong>{{ c.nom_produit }}</strong><br>
             <span class="price">{{ c.prix }} FCFA</span><br>
-            <span class="small">Statut : ⏳ En attente</span><br>
-            <span class="small">Date : {{ c.date|date:"d/m/Y H:i" }}</span>
+            <span class="small">⏳ En attente</span>
         </div>
     {% endfor %}
 
-    <!-- COMMANDES VALIDÉES -->
     {% for h in historiques %}
         <div class="card">
             <strong>{{ h.nom_service }}</strong><br>
             <span class="price">{{ h.prix }} FCFA</span><br>
             <span class="small">
-                Statut :
-                {% if h.statut == "succes" %}
-                    ✅ Succès
-                {% elif h.statut == "echec" %}
-                    ❌ Échec
-                {% endif %}
+                {% if h.statut == "succes" %}✅ Succès{% else %}❌ Échec{% endif %}
             </span>
-
-            <span class="small">Date : {{ h.date|date:"d/m/Y H:i" }}</span>
         </div>
     {% empty %}
-        <div class="card">Aucune opération enregistrée</div>
+        <div class="card">Aucune opération</div>
     {% endfor %}
 </div>
-
 
 </div>
 

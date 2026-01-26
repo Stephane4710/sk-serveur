@@ -7,8 +7,8 @@ from django.db.models import Q
 from django.core.mail import send_mail
 from django.conf import settings
 
-
 from .models import (
+    Category,
     Licence,
     ServiceImei,
     Wallet,
@@ -16,54 +16,63 @@ from .models import (
     Commande,
     Historique,
     PaymentConfig,
+    CommandeFieldValue,
+    Service,
 )
 
 # =====================================================
 # PAGE D’ACCUEIL PUBLIQUE (AVANT CONNEXION)
 # =====================================================
+
+
 def home(request):
-    # Si déjà connecté → accueil privé
+    # si connecté → accueil privé
     if request.user.is_authenticated:
         return redirect("accueil")
 
     query = request.GET.get("q", "").strip()
 
-    licences = Licence.objects.all()
-    services = ServiceImei.objects.all()
+    categories = Category.objects.prefetch_related(
+    "licences",
+    "services",              # ServiceImei
+    "services_generaux"      # Service
+)
 
     if query:
-        licences = Licence.objects.filter(
-            Q(nom__icontains=query) |
-            Q(destription__icontains=query)
-        )
-        services = ServiceImei.objects.filter(
-            Q(nom__icontains=query) |
-            Q(destription__icontains=query)
-        )
+        categories = categories.filter(
+            Q(licences__nom__icontains=query) |
+            Q(licences__destription__icontains=query) |
+            Q(services__nom__icontains=query) |
+            Q(services__destription__icontains=query)
+        ).distinct()
 
     return render(request, "affirche/home.html", {
-        "licences": licences,
-        "services": services,
+        "categories": categories,
         "query": query,
     })
 
 
+
 # =====================================================
-# ACCUEIL PRIVÉ (APRÈS CONNEXION)
+# ACCUEIL PRIVÉ (APRÈS CONNEXION) – DYNAMIQUE PAR CATÉGORIE
 # =====================================================
 @login_required
 def accueil(request):
     query = request.GET.get("q", "").strip()
 
+    # 🔹 Toutes les catégories
+    categories = Category.objects.all()
+
+    # 🔹 Licences & services (pour compatibilité, on garde)
     licences = Licence.objects.all()
     services = ServiceImei.objects.all()
 
     if query:
-        licences = Licence.objects.filter(
+        licences = licences.filter(
             Q(nom__icontains=query) |
             Q(destription__icontains=query)
         )
-        services = ServiceImei.objects.filter(
+        services = services.filter(
             Q(nom__icontains=query) |
             Q(destription__icontains=query)
         )
@@ -80,6 +89,7 @@ def accueil(request):
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
 
     return render(request, "affirche/accueil.html", {
+        "categories": categories,      # 👈 IMPORTANT
         "licences": licences,
         "services": services,
         "commandes_attente": commandes_attente,
@@ -179,76 +189,205 @@ def register_view(request):
 
 
 # =====================================================
-# COMMANDE (LICENCE / SERVICE IMEI)
+# COMMANDE (LICENCE / SERVICE)
 # =====================================================
 @login_required
-
-
 @login_required
 def commande(request, type_produit, produit_id):
 
+    # =========================
+    # RÉCUPÉRATION PRODUIT
+    # =========================
     if type_produit == "licence":
         produit = get_object_or_404(Licence, id=produit_id)
+        produit.need_email = True
+        produit.need_username = True
+        produit.need_imei = False
+        produit.need_photo = False
+
     elif type_produit == "service":
         produit = get_object_or_404(ServiceImei, id=produit_id)
+        produit.need_email = True
+        produit.need_username = True
+        produit.need_imei = True
+        produit.need_photo = False
+
+    elif type_produit == "service_general":
+        produit = get_object_or_404(Service, id=produit_id)
+        produit.need_email = produit.demande_email
+        produit.need_username = produit.demande_username
+        produit.need_imei = produit.demande_imei
+        produit.need_photo = produit.demande_photo
+
     else:
-        messages.error(request, "Type de produit invalide.")
+        messages.error(request, "Produit invalide")
         return redirect("accueil")
 
-    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    # =========================
+    # CHAMPS DYNAMIQUES
+    # =========================
+    custom_fields = []
 
+    if hasattr(produit, "custom_fields"):
+        custom_fields.extend(produit.custom_fields.all())
+
+    if produit.category:
+        for field in produit.category.custom_fields.all():
+            if field not in custom_fields:
+                custom_fields.append(field)
+
+    # =========================
+    # POST
+    # =========================
     if request.method == "POST":
+
+        commande = Commande.objects.create(
+            user=request.user,
+            type_commande=type_produit,
+            nom_produit=produit.nom,
+            prix=produit.prix,
+            email=request.POST.get("email", ""),
+            username_service=request.POST.get("username_service", ""),
+            imei=request.POST.get("imei", ""),
+            photo_lien=request.POST.get("photo_lien", ""),
+            statut="attente"
+        )
+
+        # =========================
+        # SAUVEGARDE CHAMPS CUSTOM
+        # =========================
+        custom_text = ""
+        for field in custom_fields:
+            value = request.POST.get(f"custom_{field.id}")
+            if value:
+                CommandeFieldValue.objects.create(
+                    commande=commande,
+                    field=field,
+                    value=value
+                )
+                custom_text += f"{field.nom} : {value}\n"
+
+        # =========================
+        # EMAIL ADMIN (ICI ✅)
+        # =========================
+        send_mail(
+            subject="🛒 Nouvelle commande - SK Serveur",
+            message=(
+                f"Utilisateur : {request.user.username}\n"
+                f"Email compte : {request.user.email}\n\n"
+                f"Produit : {commande.nom_produit}\n"
+                f"Type : {type_produit}\n"
+                f"Prix : {commande.prix} FCFA\n\n"
+                f"--- INFOS COMMANDE ---\n"
+                f"Email service : {commande.email}\n"
+                f"Username : {commande.username_service}\n"
+                f"IMEI : {commande.imei}\n"
+                f"Photo : {commande.photo_lien}\n\n"
+                f"--- CHAMPS PERSONNALISÉS ---\n"
+                f"{custom_text}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_EMAIL],
+            fail_silently=False,
+        )
+
+        messages.success(request, "Commande envoyée avec succès")
+        return redirect("accueil")
+
+    # =========================
+    # GET
+    # =========================
+    return render(request, "affirche/commande.html", {
+        "produit": produit,
+        "custom_fields": custom_fields
+    })
+
+    # =========================
+    # CHAMPS DYNAMIQUES
+    # =========================
+    custom_fields = getattr(produit, "custom_fields", []).all() if hasattr(produit, "custom_fields") else []
+
+    # =========================
+    # POST
+    # =========================
+    if request.method == "POST":
+
         email = request.POST.get("email")
         username_service = request.POST.get("username_service")
+        imei = request.POST.get("imei")
+        photo_lien = request.POST.get("photo_lien")
 
-        if not email or not username_service:
-            messages.error(request, "Tous les champs sont obligatoires.")
+        # validation dynamique
+        if produit.need_email and not email:
+            messages.error(request, "Email obligatoire.")
+            return redirect(request.path)
+
+        if produit.need_username and not username_service:
+            messages.error(request, "Nom d'utilisateur obligatoire.")
+            return redirect(request.path)
+
+        if produit.need_imei and not imei:
+            messages.error(request, "IMEI obligatoire.")
+            return redirect(request.path)
+
+        if produit.need_photo and not photo_lien:
+            messages.error(request, "Photo obligatoire.")
             return redirect(request.path)
 
         if wallet.solde < produit.prix:
             messages.error(request, "Solde insuffisant.")
             return redirect("fonds")
 
-        # 💰 Débit
         wallet.solde -= produit.prix
         wallet.save()
 
-        # 🛒 Création commande
-        Commande.objects.create(
+        # ✅ CRÉATION COMMANDE (STOCKÉE)
+        commande = Commande.objects.create(
             user=request.user,
             type_commande=type_produit,
             nom_produit=produit.nom,
             prix=produit.prix,
-            email=email,
-            username_service=username_service,
+            email=email or "",
+            username_service=username_service or "",
+            imei=imei,
+            photo_lien=photo_lien,
             statut="attente"
         )
 
-        # 📧 EMAIL À L’ADMIN
+        # =========================
+        # VALEURS DES CHAMPS CUSTOM
+        # =========================
+        for field in custom_fields:
+            value = request.POST.get(f"custom_{field.id}")
+            if value:
+                CommandeFieldValue.objects.create(
+                    commande=commande,
+                    field=field,
+                    value=value
+                )
+
         send_mail(
             subject="🛒 Nouvelle commande reçue",
             message=(
-                f"Nouvelle commande passée sur SK Serveur\n\n"
                 f"Utilisateur : {request.user.username}\n"
-                f"Email : {email}\n"
                 f"Produit : {produit.nom}\n"
                 f"Prix : {produit.prix} FCFA\n"
-                f"Type : {type_produit}\n\n"
-                f"Connecte-toi à l’admin pour la traiter."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[settings.ADMIN_EMAIL],
             fail_silently=False,
-)
-
+        )
 
         messages.success(request, "Commande envoyée (en attente de validation).")
         return redirect("accueil")
 
+    # =========================
+    # GET
+    # =========================
     return render(request, "affirche/commande.html", {
         "produit": produit,
-        "type": type_produit
+        "type": type_produit,
+        "custom_fields": custom_fields,
     })
-
 
 
