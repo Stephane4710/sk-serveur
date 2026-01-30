@@ -12,7 +12,6 @@ body{
     background:#0b0f17;
     color:#fff;
 }
-
 .container{
     width:90%;
     max-width:1100px;
@@ -26,12 +25,7 @@ body{
     align-items:center;
     margin-bottom:30px;
 }
-
-.header h1{
-    margin:0;
-    letter-spacing:3px;
-}
-
+.header h1{margin:0;letter-spacing:3px;}
 .back-btn{
     text-decoration:none;
     color:#fff;
@@ -46,18 +40,28 @@ body{
     padding:25px;
     border-radius:18px;
     margin-bottom:30px;
-    box-shadow:0 15px 40px rgba(0,0,0,.5);
 }
-
-.wallet h2{
-    margin-top:0;
-    color:#b0b8c6;
-}
-
 .wallet .amount{
     font-size:36px;
     font-weight:bold;
     color:#4e8cff;
+}
+
+/* SWITCH */
+.pay-switch{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    margin-bottom:25px;
+}
+.pay-switch button{
+    padding:14px;
+    border:none;
+    border-radius:14px;
+    font-weight:bold;
+    cursor:pointer;
+    background:linear-gradient(135deg,#4e8cff,#2bd3ff);
+    color:#fff;
 }
 
 /* BOX */
@@ -68,49 +72,13 @@ body{
     margin-bottom:30px;
 }
 
-.form-box h3{
-    margin-top:0;
-}
-
-/* INFO PAIEMENT */
-.pay-info{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
-    margin-top:15px;
-}
-
-.pay-card{
-    background:#0f172a;
-    padding:15px;
-    border-radius:14px;
-    text-align:center;
-    border:1px solid rgba(255,255,255,0.08);
-}
-
-.pay-card strong{
-    display:block;
-    margin-bottom:6px;
-}
-
-.pay-card span{
-    font-size:15px;
-    color:#4e8cff;
-    font-weight:bold;
-}
-
 /* FORM */
-.form-group{
-    margin-bottom:18px;
-}
-
+.form-group{margin-bottom:18px;}
 .form-group label{
     display:block;
-    font-size:14px;
     margin-bottom:6px;
     color:#b0b8c6;
 }
-
 .form-group input,
 .form-group select{
     width:100%;
@@ -121,22 +89,31 @@ body{
     color:#fff;
 }
 
+/* NUMERO / ADRESSE */
+.pay-number{
+    margin-top:12px;
+    padding:12px;
+    background:#020617;
+    border-radius:10px;
+    color:#4e8cff;
+    font-weight:bold;
+    cursor:pointer;
+    text-align:center;
+}
+
+/* SUBMIT */
 .submit-btn{
     width:100%;
     padding:14px;
     border:none;
     border-radius:12px;
-    background:linear-gradient(135deg,#4e8cff,#2bd3ff);
-    color:#fff;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#000;
     font-weight:bold;
     cursor:pointer;
 }
 
-/* TRANSACTIONS */
-.transactions h3{
-    margin-bottom:15px;
-}
-
+/* HISTORIQUE */
 .tx{
     background:rgba(255,255,255,0.06);
     padding:15px;
@@ -144,144 +121,155 @@ body{
     margin-bottom:12px;
     display:flex;
     justify-content:space-between;
-    align-items:center;
 }
-
-.tx small{
-    color:#b0b8c6;
-}
-
-.status{
-    padding:6px 10px;
-    border-radius:10px;
-    font-size:12px;
-    font-weight:bold;
-}
-
+.status{padding:6px 10px;border-radius:10px;font-weight:bold;}
 .attente{background:#facc15;color:#000;}
 .valide{background:#22c55e;color:#000;}
 .refuse{background:#ef4444;color:#fff;}
 
-/* MESSAGES */
-.message{
-    padding:12px;
-    border-radius:10px;
-    margin-bottom:15px;
-    font-weight:bold;
-}
-.success{background:rgba(34,197,94,0.2);}
-.error{background:rgba(239,68,68,0.2);}
-
-/* RESPONSIVE */
 @media(max-width:768px){
-    .pay-info{
-        grid-template-columns:1fr;
-    }
+    .pay-switch{grid-template-columns:1fr;}
 }
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
-    <!-- HEADER -->
-    <div class="header">
-        <h1>MES FONDS</h1>
-        <a href="{% url 'accueil' %}" class="back-btn">← Retour</a>
-    </div>
+<!-- HEADER -->
+<div class="header">
+    <h1>MES FONDS</h1>
+    <a href="{% url 'accueil' %}" class="back-btn">← Retour</a>
+</div>
 
-    <!-- MESSAGES -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="message {{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+<!-- SOLDE -->
+<div class="wallet">
+    <h2>Solde actuel</h2>
+    <div class="amount">{{ wallet.solde }} FCFA</div>
+</div>
 
-    <!-- SOLDE -->
-    <div class="wallet">
-        <h2>Solde actuel</h2>
-        <div class="amount">{{ wallet.solde }} FCFA</div>
-    </div>
+<!-- SWITCH -->
+<div class="pay-switch">
+    <button type="button" onclick="showMobile()">📱 Mobile Money</button>
+    <button type="button" onclick="showUSDT()">🔥 USDT</button>
+</div>
 
-    <!-- INSTRUCTIONS -->
-    <div class="form-box">
-        <h3>📲 Dépôt Mobile Money</h3>
-        <p style="color:#b0b8c6;">
-            Effectuez le dépôt sur l’un des numéros ci-dessous,
-            puis remplissez le formulaire avec la référence du paiement.
-        </p>
+<!-- MOBILE -->
+<div id="mobile-box" class="form-box">
+    <h3>📲 Dépôt Mobile Money</h3>
 
-        <div class="pay-info">
+    <div class="form-group">
+        <label>Choisir le réseau</label>
+        <select onchange="selectMethode(this)">
+            <option value="">-- Sélectionner --</option>
             {% for p in payment_configs %}
-                <div class="pay-card">
-                    <strong>{{ p.get_methode_display }}</strong>
-                    <span>{{ p.numero }}</span>
-                </div>
-            {% empty %}
-                <p style="color:#facc15;">
-                    Aucun moyen de paiement disponible pour le moment.
-                </p>
+                {% if p.methode in "wave mtn orange" %}
+                <option value="{{ p.methode }}" data-num="{{ p.numero }}">
+                    {{ p.get_methode_display }}
+                </option>
+                {% endif %}
             {% endfor %}
+        </select>
+    </div>
+
+    <div id="mobileNumber" class="pay-number" style="display:none"></div>
+</div>
+
+<!-- USDT -->
+<div id="usdt-box" class="form-box" style="display:none">
+    <h3>🔥 Dépôt USDT</h3>
+
+    <div class="form-group">
+        <label>Choisir le réseau</label>
+        <select onchange="selectMethode(this)">
+            <option value="">-- Sélectionner --</option>
+            {% for p in payment_configs %}
+                {% if "usdt" in p.methode %}
+                <option value="{{ p.methode }}" data-num="{{ p.numero }}">
+                    {{ p.get_methode_display }}
+                </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="usdtAddress" class="pay-number" style="display:none"></div>
+</div>
+
+<!-- FORM -->
+<div class="form-box">
+    <h3>Envoyer la demande</h3>
+
+    <form method="post" action="{% url 'ajouter_fonds' %}">
+        {% csrf_token %}
+
+        <!-- IMPORTANT : methode envoyée -->
+        <input type="hidden" name="methode" id="methodeInput">
+
+        <div class="form-group">
+            <label>Montant</label>
+            <input type="number" name="montant" required>
         </div>
 
-
-        <p style="margin-top:15px;color:#facc15;">
-            ⚠️ Le solde sera crédité après vérification manuelle.
-        </p>
-    </div>
-
-    <!-- FORMULAIRE -->
-    <div class="form-box">
-        <h3>Ajouter des fonds</h3>
-
-        <form method="post" action="{% url 'ajouter_fonds' %}">
-            {% csrf_token %}
-
-            <div class="form-group">
-                <label>Montant (FCFA)</label>
-                <input type="number" name="montant" min="500" required>
-            </div>
-
-            <div class="form-group">
-                <label>Méthode de paiement</label>
-                <select name="methode" required>
-                    <option value="">-- Choisir --</option>
-                    <option value="wave">Wave</option>
-                    <option value="mtn">MTN Money</option>
-                    <option value="orange">Orange Money</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Référence de paiement</label>
-                <input type="text" name="reference" placeholder="ID / Référence transaction" required>
-            </div>
-
-            <button class="submit-btn">Envoyer la demande</button>
-        </form>
-    </div>
-
-    <!-- HISTORIQUE -->
-    <div class="transactions">
-        <h3>Historique des transactions</h3>
-
-        {% for tx in transactions %}
-        <div class="tx">
-            <div>
-                <strong>{{ tx.montant }} FCFA</strong><br>
-                <small>{{ tx.get_methode_display }} • {{ tx.reference }}</small>
-            </div>
-            <div class="status {{ tx.statut }}">
-                {{ tx.get_statut_display }}
-            </div>
+        <div class="form-group">
+            <label>Référence / TXID</label>
+            <input type="text" name="reference" required>
         </div>
-        {% empty %}
-        <div class="tx">Aucune transaction</div>
-        {% endfor %}
+
+        <button class="submit-btn">Envoyer</button>
+    </form>
+</div>
+
+<!-- HISTORIQUE -->
+<div class="form-box">
+    <h3>Historique</h3>
+    {% for tx in transactions %}
+    <div class="tx">
+        <div>
+            <strong>{{ tx.montant }} FCFA</strong><br>
+            <small>{{ tx.get_methode_display }} • {{ tx.reference }}</small>
+        </div>
+        <div class="status {{ tx.statut }}">{{ tx.get_statut_display }}</div>
     </div>
+    {% empty %}
+    <p>Aucune transaction</p>
+    {% endfor %}
+</div>
 
 </div>
+
+<script>
+function showMobile(){
+    document.getElementById("mobile-box").style.display="block";
+    document.getElementById("usdt-box").style.display="none";
+}
+function showUSDT(){
+    document.getElementById("mobile-box").style.display="none";
+    document.getElementById("usdt-box").style.display="block";
+}
+
+function selectMethode(el){
+    const methode = el.value;
+    const numero = el.selectedOptions[0].dataset.num || "";
+    document.getElementById("methodeInput").value = methode;
+
+    let box = methode.includes("usdt")
+        ? document.getElementById("usdtAddress")
+        : document.getElementById("mobileNumber");
+
+    box.style.display="block";
+    box.innerText = (methode.includes("usdt") ? "🔗 " : "📞 ") + numero + " (cliquer pour copier)";
+    box.onclick = () => copyText(numero, box);
+}
+
+function copyText(text, el){
+    navigator.clipboard.writeText(text).then(()=>{
+        const old = el.innerText;
+        el.innerText = "✅ Copié !";
+        setTimeout(()=> el.innerText = old, 1200);
+    });
+}
+</script>
 
 </body>
 </html>

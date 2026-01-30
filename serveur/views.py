@@ -5,6 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.core.mail import send_mail
+from django.db.models import Q
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
 from django.conf import settings
 
 from .models import (
@@ -56,30 +60,30 @@ def home(request):
 # =====================================================
 # ACCUEIL PRIVÉ (APRÈS CONNEXION) – DYNAMIQUE PAR CATÉGORIE
 # =====================================================
+
 @login_required
 def accueil(request):
     query = request.GET.get("q", "").strip()
 
-    # 🔹 Toutes les catégories
-    categories = Category.objects.all()
-
-    # 🔹 Licences & services (pour compatibilité, on garde)
-    licences = Licence.objects.all()
-    services = ServiceImei.objects.all()
+    categories = Category.objects.prefetch_related(
+        "licences",
+        "services",
+        "services_generaux",
+    )
 
     if query:
-        licences = licences.filter(
+        categories = categories.filter(
             Q(nom__icontains=query) |
-            Q(destription__icontains=query)
-        )
-        services = services.filter(
-            Q(nom__icontains=query) |
-            Q(destription__icontains=query)
-        )
+            Q(licences__nom__icontains=query) |
+            Q(licences__destription__icontains=query) |
+            Q(services__nom__icontains=query) |
+            Q(services__destription__icontains=query) |
+            Q(services_generaux__nom__icontains=query) |
+            Q(services_generaux__description__icontains=query)
+        ).distinct()
 
-    commandes_attente = Commande.objects.filter(
-        user=request.user,
-        statut="attente"
+    commandes = Commande.objects.filter(
+        user=request.user
     ).order_by("-date")
 
     historiques = Historique.objects.filter(
@@ -88,15 +92,16 @@ def accueil(request):
 
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
 
-    return render(request, "affirche/accueil.html", {
-        "categories": categories,      # 👈 IMPORTANT
-        "licences": licences,
-        "services": services,
-        "commandes_attente": commandes_attente,
+    context = {
+        "categories": categories,
+        "commandes": commandes,
         "historiques": historiques,
         "wallet": wallet,
         "query": query,
-    })
+    }
+
+    return render(request, "affirche/accueil.html", context)
+
 
 
 # =====================================================
@@ -124,27 +129,65 @@ def fonds(request):
 # =====================================================
 @login_required
 def ajouter_fonds(request):
-    if request.method == "POST":
-        montant = request.POST.get("montant")
-        methode = request.POST.get("methode")
-        reference = request.POST.get("reference")
+    print("🚨 ajouter_fonds APPELÉ 🚨")
 
-        if not montant or not methode or not reference:
-            messages.error(request, "Tous les champs sont obligatoires.")
-            return redirect("fonds")
-
-        Transaction.objects.create(
-            user=request.user,
-            montant=montant,
-            methode=methode,
-            reference=reference,
-            statut="attente"
-        )
-
-        messages.success(request, "Demande envoyée. En attente de validation.")
+    if request.method != "POST":
+        print("❌ PAS UN POST")
         return redirect("fonds")
 
+    print("✅ POST DÉTECTÉ")
+
+    montant = request.POST.get("montant")
+    methode = request.POST.get("methode")
+    reference = request.POST.get("reference")
+
+    print("📦 DONNÉES :", montant, methode, reference)
+
+    if not montant or not methode or not reference:
+        print("❌ CHAMPS MANQUANTS")
+        messages.error(request, "Tous les champs sont obligatoires.")
+        return redirect("fonds")
+
+    transaction = Transaction.objects.create(
+        user=request.user,
+        montant=int(montant),
+        methode=methode,
+        reference=reference,
+        statut="attente"
+    )
+
+    print("✅ TRANSACTION CRÉÉE")
+
+    config = PaymentConfig.objects.filter(
+        methode=methode,
+        actif=True
+    ).first()
+
+    numero = config.numero if config else "NON DÉFINI"
+
+    print("📧 AVANT SEND_MAIL")
+
+    send_mail(
+        subject="💰 Nouvelle demande d'ajout de fonds",
+        message=(
+            f"Utilisateur : {request.user.username}\n"
+            f"Email : {request.user.email}\n"
+            f"Méthode : {methode}\n"
+            f"Numéro : {numero}\n"
+            f"Montant : {montant} FCFA\n"
+            f"Référence : {reference}"
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[settings.ADMIN_EMAIL],
+        fail_silently=False,
+    )
+
+    print("✅ APRÈS SEND_MAIL")
+
+    messages.success(request, "Demande envoyée. En attente de validation.")
     return redirect("fonds")
+
+
 
 
 # =====================================================
@@ -191,7 +234,6 @@ def register_view(request):
 # =====================================================
 # COMMANDE (LICENCE / SERVICE)
 # =====================================================
-@login_required
 @login_required
 def commande(request, type_produit, produit_id):
 

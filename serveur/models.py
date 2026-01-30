@@ -182,19 +182,25 @@ class PaymentConfig(models.Model):
         ('wave', 'Wave'),
         ('mtn', 'MTN Money'),
         ('orange', 'Orange Money'),
+
+        # 🔥 USDT
+        ('usdt_trc20', 'USDT TRC20'),
+        ('usdt_erc20', 'USDT ERC20'),
+        ('usdt_bep20', 'USDT BEP20'),
     ]
 
     methode = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=METHODE_CHOICES,
         unique=True
     )
 
-    numero = models.CharField(max_length=30)
+    numero = models.CharField(max_length=100)  # numéro ou adresse wallet
     actif = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.methode.upper()} - {self.numero}"
+        return f"{self.get_methode_display()} - {self.numero}"
+
     
 
     

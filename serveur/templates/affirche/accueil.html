@@ -218,7 +218,7 @@ body{
 <!-- =======================
      ACCUEIL : TOUT
 ======================= -->
-<div id="all" class="section active">
+<div id="all" class="section active" data-results>
     {% for cat in categories %}
         <h2 style="margin-top:30px;color:#4e8cff;">{{ cat.nom }}</h2>
 
@@ -369,6 +369,41 @@ function showSection(id){
     document.getElementById("menuList").classList.remove("show");
 }
 </script>
+
+
+
+
+
+<script>
+const input = document.querySelector('.search input');
+let timer = null;
+
+input.addEventListener('input', () => {
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+        const q = input.value.trim();
+
+        fetch(`?q=${encodeURIComponent(q)}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newResults = doc.querySelector('[data-results]');
+            const currentResults = document.querySelector('[data-results]');
+
+            if (newResults && currentResults) {
+                currentResults.innerHTML = newResults.innerHTML;
+            }
+        });
+    }, 300); // délai anti-spam (UX PRO)
+});
+</script>
+
+
 
 </body>
 </html>
