@@ -61,29 +61,51 @@ def home(request):
 # ACCUEIL PRIVÉ (APRÈS CONNEXION) – DYNAMIQUE PAR CATÉGORIE
 # =====================================================
 
+from django.db.models import Q, Prefetch
+
 @login_required
 def accueil(request):
     query = request.GET.get("q", "").strip()
 
-    categories = Category.objects.prefetch_related(
-        "licences",
-        "services",
-        "services_generaux",
-    )
-
     if query:
-        categories = categories.filter(
+        # 🔹 éléments filtrés UNIQUEMENT par le mot recherché
+        licences_qs = Licence.objects.filter(
             Q(nom__icontains=query) |
-            Q(licences__nom__icontains=query) |
-            Q(licences__destription__icontains=query) |
-            Q(services__nom__icontains=query) |
-            Q(services__destription__icontains=query) |
-            Q(services_generaux__nom__icontains=query) |
-            Q(services_generaux__description__icontains=query)
-        ).distinct()
+            Q(destription__icontains=query)
+        )
 
-    commandes = Commande.objects.filter(
-        user=request.user
+        services_imei_qs = ServiceImei.objects.filter(
+            Q(nom__icontains=query) |
+            Q(destription__icontains=query)
+        )
+
+        services_generaux_qs = Service.objects.filter(
+            Q(nom__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+        # 🔹 catégories QUI CONTIENNENT AU MOINS UN MATCH
+        categories = Category.objects.filter(
+            Q(licences__in=licences_qs) |
+            Q(services__in=services_imei_qs) |
+            Q(services_generaux__in=services_generaux_qs)
+        ).distinct().prefetch_related(
+            Prefetch("licences", queryset=licences_qs),
+            Prefetch("services", queryset=services_imei_qs),
+            Prefetch("services_generaux", queryset=services_generaux_qs),
+        )
+
+    else:
+        # 🔹 pas de recherche → affichage normal
+        categories = Category.objects.prefetch_related(
+            "licences",
+            "services",
+            "services_generaux",
+        )
+
+    commandes_attente = Commande.objects.filter(
+        user=request.user,
+        statut="attente"
     ).order_by("-date")
 
     historiques = Historique.objects.filter(
@@ -92,15 +114,13 @@ def accueil(request):
 
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
 
-    context = {
+    return render(request, "affirche/accueil.html", {
         "categories": categories,
-        "commandes": commandes,
+        "commandes_attente": commandes_attente,
         "historiques": historiques,
         "wallet": wallet,
         "query": query,
-    }
-
-    return render(request, "affirche/accueil.html", context)
+    })
 
 
 
